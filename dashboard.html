@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>HealSTI - List Display Example</title>
+ <style>
+ * {
+ box-sizing: border-box;
+ }
+ body {
+ font-family: Arial, sans-serif;
+ margin: 0;
+ min-height: 100vh;
+ display: flex;
+ flex-direction: column;
+ position: relative;
+ }
+
+ /* BACKGROUND IMAGE WITH LOW OPACITY */
+ body::before {
+   content: '';
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background-image: url("image.jpg"); /* Replace with your image URL or file path */
+   background-size: cover;
+   background-position: center;
+   opacity: 0.08; /* Adjust opacity as needed */
+   z-index: -1;
+ }
+
+ header {
+ background: #2c3e50;
+ color: #fff;
+ padding: 10px 20px;
+ flex-shrink: 0;
+ position: relative;
+ }
+ .nav-container {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ }
+ h1 {
+ margin: 0;
+ font-size: 20px;
+ }
+ nav {
+ display: flex;
+ gap: 10px;
+ }
+ nav a, .menu-button {
+ text-decoration: none;
+ color: white;
+ background: #34495e;
+ padding: 8px 14px;
+ border-radius: 4px;
+ font-size: 15px;
+ cursor: pointer;
+ user-select: none;
+ transition: background 0.3s;
+ }
+ nav a:hover, .menu-button:hover {
+ background: #3d566e;
+ }
+ .hamburger {
+ display: none;
+ width: 25px;
+ height: 20px;
+ position: relative;
+ cursor: pointer;
+ z-index: 20;
+ }
+ .hamburger span {
+ position: absolute;
+ height: 3px;
+ width: 100%;
+ background: white;
+ border-radius: 4px;
+ transition: 0.3s;
+ }
+ .hamburger span:nth-child(1) { top: 0; }
+ .hamburger span:nth-child(2) { top: 8px; }
+ .hamburger span:nth-child(3) { top: 16px; }
+ .hamburger.active span:nth-child(1) {
+ transform: rotate(45deg);
+ top: 8px;
+ }
+ .hamburger.active span:nth-child(2) {
+ opacity: 0;
+ }
+ .hamburger.active span:nth-child(3) {
+ transform: rotate(-45deg);
+ top: 8px;
+ }
+ @media (max-width: 768px) {
+ nav {
+ display: none;
+ flex-direction: column;
+ position: absolute;
+ top: 100%;
+ right: 0;
+ background: #2c3e50;
+ width: 100%;
+ padding: 10px 0;
+ z-index: 10;
+ }
+ nav.show {
+ display: flex;
+ }
+ nav a, .menu-button {
+ padding: 12px 20px;
+ font-size: 16px;
+ width: 100%;
+ text-align: left;
+ border-radius: 0;
+ }
+ .hamburger {
+ display: block;
+ }
+ }
+ #list-container {
+ flex-grow: 1;
+ background: #f9f9f9;
+ padding: 20px 30px;
+ border-top: 2px solid #2c3e50;
+ overflow-y: auto;
+ min-height: 250px;
+ }
+ #list-container.hidden {
+ display: none;
+ }
+ #list-container h2 {
+ margin-top: 0;
+ color: #2c3e50;
+ font-size: 26px;
+ }
+ #list-container ul {
+ padding-left: 20px;
+ color: #333;
+ }
+ #list-container ul li {
+ font-size: 28px;
+ margin-bottom: 12px;
+ }
+ #closeListBtn {
+ background: #e74c3c;
+ border: none;
+ color: white;
+ padding: 6px 12px;
+ border-radius: 4px;
+ cursor: pointer;
+ font-size: 14px;
+ float: right;
+ margin-bottom: 15px;
+ }
+ #closeListBtn:hover {
+ background: #c0392b;
+ }
+ #appointment {
+ background: #f0f4f7;
+ padding: 20px 30px;
+ border-top: 2px solid #2c3e50;
+ min-height: 300px;
+ }
+ #appointment.hidden {
+ display: none;
+ }
+ #appointment h2 {
+ margin-top: 0;
+ color: #2c3e50;
+ font-size: 26px;
+ }
+ #appointment label {
+ display: block;
+ margin-top: 12px;
+ font-weight: 600;
+ color: #333;
+ }
+ #appointment input[type="text"],
+ #appointment select,
+ #appointment textarea {
+ width: 100%;
+ padding: 8px 10px;
+ margin-top: 6px;
+ border: 1px solid #ccc;
+ border-radius: 4px;
+ font-size: 16px;
+ resize: vertical;
+ }
+ #appointment textarea {
+ min-height: 80px;
+ }
+ #appointment button[type="submit"] {
+ margin-top: 15px;
+ background: #27ae60;
+ border: none;
+ color: white;
+ padding: 10px 18px;
+ border-radius: 4px;
+ cursor: pointer;
+ font-size: 16px;
+ }
+ #appointment button[type="submit"]:hover {
+ background: #1e8449;
+ }
+ #closeAppointmentBtn {
+ background: #e74c3c;
+ border: none;
+ color: white;
+ padding: 6px 12px;
+ border-radius: 4px;
+ cursor: pointer;
+ font-size: 14px;
+ float: right;
+ margin-bottom: 15px;
+ }
+ #closeAppointmentBtn:hover {
+ background: #c0392b;
+ }
+ #confirmationMessage {
+ margin-top: 15px;
+ font-size: 18px;
+ color: green;
+ display: none;
+ }
+ </style>
+</head>
+<body>
+ <header>
+ <div class="nav-container">
+ <h1>HealSTI</h1>
+ <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button"
+tabindex="0">
+ <span></span><span></span><span></span>
+ </div>
+ <nav id="navMenu">
+ <a class="menu-button" id="openMedicine" href="#">Medicine</a>
+ <a class="menu-button" id="openEquipment" href="#">Equipment</a>
+ <a class="menu-button" id="openSchedule" href="#">Schedule</a>
+ <a class="menu-button" id="openClinic" href="#">Find Clinic</a>
+ <a class="menu-button" id="openAppointment" href="#">Appointment</a>
+ </nav>
+ </div>
+ </header>
+ <section id="list-container" class="hidden" aria-live="polite">
+ <button id="closeListBtn" aria-label="Close list">× Close</button>
+ <h2 id="list-title"></h2>
+ <ul id="list-content"></ul>
+ </section>
+ <section id="appointment" class="hidden" aria-live="polite">
+ <button id="closeAppointmentBtn" aria-label="Close appointment">× Close</button>
+ <h2>Book an Appointment</h2>
+ <form id="appointmentForm">
+ <label for="name">Full Name:</label>
+ <input type="text" id="name" name="name" required />
+ <label for="date">Date:</label>
+ <select id="date" name="date" required>
+ <option value="">-- Select a Date --</option>
+ <option value="Monday">Monday</option>
+ <option value="Tuesday">Tuesday</option>
+ <option value="Wednesday">Wednesday</option>
+ <option value="Thursday">Thursday</option>
+ <option value="Friday">Friday</option>
+ </select>
+ <label for="time">Time:</label>
+ <select id="time" name="time" required>
+ <option value="">-- Select a Time --</option>
+ <option value="8:00 AM">8:00 AM</option>
+ <option value="9:00 AM">9:00 AM</option>
+ <option value="10:00 AM">10:00 AM</option>
+ <option value="11:00 AM">11:00 AM</option>
+ <option value="1:00 PM">1:00 PM</option>
+ <option value="2:00 PM">2:00 PM</option>
+ <option value="3:00 PM">3:00 PM</option>
+ <option value="4:00 PM">4:00 PM</option>
+ </select>
+ <label for="doctor">Doctor:</label>
+ <select id="doctor" name="doctor" required>
+ <option value="">-- Select a Doctor --</option>
+ <option value="Dr. Julaton">Dr. Santos</option>
+ <option value="Dr. Garido">Dr. Reyes</option>
+ <option value="Dr. Mendoza">Dr. Cruz</option>
+ <option value="Dr. Aizley">Dr. Flores</option>
+ <option value="Dr. Allen">Dr. Ramirez</option>
+ </select>
+ <label for="reason">Reason for Visit:</label>
+ <textarea id="reason" name="reason" required></textarea>
+ <button type="submit">Submit</button>
+ </form>
+ <div id="confirmationMessage" role="alert"></div>
+ </section>
+ <script>
+ const lists = {
+ medicine: {
+ title: 'Medicine List',
+ items: [
+ 'Paracetamol – for fever and pain relief',
+ 'Colchicine – for inflammation and pain',
+ 'Amlodipine – for high blood pressure',
+ 'Metformin – to control blood sugar levels',
+ 'Mefenamic Acid – nonsteroidal anti-inflammatory drug',
+ 'Clopidogrel – antiplatelet medication',
+ 'Clozapine – antipsychotic medication',
+ 'Sertraline – for depression and anxiety disorders'
+ ]
+ },
+ equipment: {
+ title: 'Equipment List',
+ items: [
+ 'Dental chair – for dental procedures',
+ 'Surgery bed – supports patients during surgery',
+ 'Ultrasound – diagnostic imaging using sound waves',
+ 'Height and weight scale – measures height & weight',
+ 'Defibrillator – restores heart rhythm via electric shock',
+ 'Pulse oximeter – measures oxygen saturation & heart rate',
+ 'Oxygen cylinder – portable/stationary oxygen supply'
+ ]
+ },
+ schedule: {
+ title: 'Doctor Schedule',
+ items: [
+ 'Monday: Dr. Julaton – 9:00 AM to 4:00 PM',
+ 'Tuesday: Dr. Garido – 10:00 AM to 5:00 PM',
+ 'Wednesday: Dr. Mendoza – 8:00 AM to 2:00 PM',
+ 'Thursday: Dr. Aizley – 1:00 PM to 6:00 PM',
+ 'Friday: Dr. Allen – 9:00 AM to 3:00 PM'
+ ]
+ },
+ clinic: {
+ title: '24/7 Emergency Clinics in Quezon City',
+ items: [
+ 'Capitol Medical Center – Quezon Ave, QC',
+ 'Quezon City General Hospital – BIR Road, QC',
+ 'Rosario Maclang Bautista General Hospital – Batasan Hills, QC',
+ 'St. Luke’s Medical Center – E. Rodriguez Sr. Ave, QC',
+ 'Philippine Orthopedic Center – Maria Clara St., QC'
+ ]
+ }
+ };
+ const listContainer = document.getElementById('list-container');
+ const listTitle = document.getElementById('list-title');
+ const listContent = document.getElementById('list-content');
+ const closeBtn = document.getElementById('closeListBtn');
+ const appointmentSection = document.getElementById('appointment');
+ const confirmationMessage = document.getElementById('confirmationMessage');
+ function showList(type) {
+ const data = lists[type];
+ if (!data) return;
+ appointmentSection.classList.add('hidden');
+ listTitle.textContent = data.title;
+ listContent.innerHTML = '';
+ data.items.forEach(item => {
+ const li = document.createElement('li');
+ li.textContent = item;
+ listContent.appendChild(li);
+ });
+ listContainer.classList.remove('hidden');
+ hamburger.classList.remove('active');
+ navMenu.classList.remove('show');
+ }
+ function closeList() {
+ listContainer.classList.add('hidden');
+ listTitle.textContent = '';
+ listContent.innerHTML = '';
+ }
+ document.getElementById('openMedicine').addEventListener('click', e => {
+ e.preventDefault();
+ showList('medicine');
+ });
+ document.getElementById('openEquipment').addEventListener('click', e => {
+ e.preventDefault();
+ showList('equipment');
+ });
+ document.getElementById('openSchedule').addEventListener('click', e => {
+ e.preventDefault();
+ showList('schedule');
+ });
+ document.getElementById('openClinic').addEventListener('click', e => {
+ e.preventDefault();
+ showList('clinic');
+ });
+ closeBtn.addEventListener('click', closeList);
+ const hamburger = document.getElementById('hamburger');
+ const navMenu = document.getElementById('navMenu');
+ hamburger.addEventListener('click', () => {
+ hamburger.classList.toggle('active');
+ navMenu.classList.toggle('show');
+ });
+ document.getElementById('openAppointment').addEventListener('click', function (e) {
+ e.preventDefault();
+ closeList();
+ confirmationMessage.style.display = 'none';
+ appointmentSection.classList.remove('hidden');
+ hamburger.classList.remove('active');
+ navMenu.classList.remove('show');
+ });
+ document.getElementById('closeAppointmentBtn').addEventListener('click', () => {
+ appointmentSection.classList.add('hidden');
+ confirmationMessage.style.display = 'none';
+ });
+ const appointmentForm = document.getElementById('appointmentForm');
+ appointmentForm.addEventListener('submit', function (e) {
+ e.preventDefault();
+ const name = document.getElementById('name').value.trim();
+ const date = document.getElementById('date').value;
+ const time = document.getElementById('time').value;
+ const doctor = document.getElementById('doctor').value;
+ const reason = document.getElementById('reason').value.trim();
+ if (name && date && time && doctor && reason) {
+ confirmationMessage.textContent = `
+ Appointment booked for ${name} with ${doctor} on $
+{date} at ${time}.`;
+ confirmationMessage.style.display = 'block';
+ appointmentForm.reset();
+ } else {
+ confirmationMessage.style.display = 'none';
+ }
+ });
+ </script>
+</body>
+</html>
